@@ -37,6 +37,7 @@ function autolink_compare (a, b) {
     return myutils.string_compare(a.addr, b.addr) || myutils.string_compare(a.direction, b.direction);
 }
 
+<<<<<<< cfe5e55cf308fa6338dd39c1e6f8641d17f33d8d
 function is_not_defined (a) {
     return a === null || a === '' || a === undefined;
 }
@@ -57,6 +58,14 @@ function linkroute_compare (a, b) {
         result = myutils.string_compare(a.direction, b.direction);
     }
     return result;
+=======
+function same_autolink_definition (a, b) {
+    return a.addr === b.addr && a.direction === b.direction && a.containerId === b.containerId;
+}
+
+function linkroute_compare (a, b) {
+    return myutils.string_compare(a.prefix, b.prefix) || myutils.string_compare(a.direction, b.direction);
+>>>>>>> refactor router address configuration
 }
 
 function same_linkroute_definition (a, b) {
@@ -148,12 +157,17 @@ function retrieve_config(config, router) {
     var errors = {};
     return Promise.all(entities.map(function (entity) {
         return router.query(entity.type).then(function (results) {
+<<<<<<< cfe5e55cf308fa6338dd39c1e6f8641d17f33d8d
             if (Array.isArray(results)) {
                 log.debug('retrieved %s from %s', entity.name, router_id);
                 config[entity.name] = results;
             } else {
                 log.warn('unexpected result from retrieving %s from %s: %j', entity.name, router_id, results);
             }
+=======
+            log.debug('retrieved %s from %s', entity.name, router_id);
+            config[entity.name] = results;
+>>>>>>> refactor router address configuration
         }).catch(function (error) {
             log.error('error retrieving %s from %s: %s', entity.name, router_id, error);
             errors[entity.name] = error;
@@ -179,16 +193,15 @@ function apply_config(desired, router) {
         entities.filter(retrieved_without_error).forEach(function (entity) {
             var delta = myutils.changes(actual[entity.name], desired[entity.name], entity.comparator, entity.equality);
             if (delta) {
+                log.info('updating configuration of %s on %s: %s', entity.name, router_id, delta.description);
                 stale[entity.name] = delta.removed.filter(matches_qualifier).concat(delta.modified);
                 missing[entity.name] = delta.added.concat(delta.modified);
-                log.debug('updating configuration of %s on %s: missing=%j, stale=%j', entity.name, router_id, missing[entity.name], stale[entity.name]);
             } else {
                 log.debug('configuration of %s is up to date on %s', entity.name, router_id);
             }
         });
 
         if (missing.size() || stale.size() || Object.keys(errors).length) {
-            log.info('updating configuration of %s: %d elements to add, %d to remove', router_id, missing.size(), stale.size());
             var work = Promise.all([delete_config(stale, router), create_config(missing, router)]);
             return work.then(function () {
                 return apply_config(desired, router);
@@ -213,7 +226,7 @@ function desired_address_config(high_level_address_definitions) {
             config.add_address({prefix:def.address, distribution:'balanced', waypoint:true});
             config.add_autolink_pair({addr:def.address, containerId: /*def.allocated_to ||*/ def.address});
         } else if (def.type === 'topic') {
-            config.add_linkroute_pair({prefix:def.address, containerId: def.allocated_to ? def.address : null});
+            config.add_linkroute_pair({prefix:def.address, containerId: def.allocated_to ? def.allocated_to : null});
         } else if (def.type === 'anycast') {
             config.add_address({prefix:def.address, distribution:'balanced', waypoint:false});
         } else if (def.type === 'multicast') {
