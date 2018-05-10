@@ -11,6 +11,8 @@ import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.clients.AbstractClient;
 import io.enmasse.systemtest.clients.Argument;
 import io.enmasse.systemtest.clients.ArgumentMap;
@@ -58,6 +60,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
+    protected static final OSBApiClient osbApiClient = new OSBApiClient(kubernetes);
     private static Logger log = CustomLogger.getLogger();
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
@@ -106,6 +109,43 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             throw e;
         }
     }
+
+
+    //================================================================================================
+    //==================================== OpenServiceBroker methods =================================
+    //================================================================================================
+
+    /**
+     * Provision of service instance and optionally wait until instance is ready
+     *
+     * @param addressSpace address space that will be created
+     * @param wait         true for wait until service instance is ready to use
+     * @return id of instance
+     * @throws Exception
+     */
+    protected String createServiceInstance(AddressSpace addressSpace, boolean wait) throws Exception {
+        String instanceId = osbApiClient.provisionInstance(addressSpace);
+        if (wait) {
+            TestUtils.waitForServiceInstanceReady(osbApiClient, instanceId);
+        }
+        return instanceId;
+    }
+
+    protected String createServiceInstance(AddressSpace addresSpace) throws Exception {
+        return createServiceInstance(addresSpace, true);
+    }
+
+    protected void deleteServiceInstance(AddressSpace addressSpace, String instanceId) throws Exception {
+        osbApiClient.deprovisionInstance(addressSpace, instanceId);
+    }
+
+    protected String generateBinding(AddressSpace addressSpace, String instanceId, HashMap<String, String> binding) throws Exception {
+        return osbApiClient.generateBinding(addressSpace, instanceId, binding);
+    }
+
+    //================================================================================================
+    //==================================== AddressSpace methods ======================================
+    //================================================================================================
 
     protected void addToAddressSpaceList(AddressSpace... addressSpaces) {
         addressSpaceList.addAll(Arrays.asList(addressSpaces));
