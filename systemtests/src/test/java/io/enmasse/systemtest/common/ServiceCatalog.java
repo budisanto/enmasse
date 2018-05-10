@@ -23,18 +23,18 @@ public class ServiceCatalog extends TestBase {
     @Test
     void serviceCatalogApiTest() throws Exception {
         AddressSpace addressSpaceViaOSBAPIBrokered = new AddressSpace("myspace-via-osbapi-brokered", AddressSpaceType.BROKERED);
-        createAddressSpaceViaServiceBroker(addressSpaceViaOSBAPIBrokered);
+        createAddressSpaceViaServiceBroker(addressSpaceViaOSBAPIBrokered, "#");
 
         AddressSpace addressSpaceViaOSBAPIStandard = new AddressSpace("myspace-via-osbapi-standard", AddressSpaceType.STANDARD);
-        createAddressSpaceViaServiceBroker(addressSpaceViaOSBAPIStandard);
+        createAddressSpaceViaServiceBroker(addressSpaceViaOSBAPIStandard, "*");
     }
 
-    private void createAddressSpaceViaServiceBroker(AddressSpace addressSpace) throws Exception {
+    private void createAddressSpaceViaServiceBroker(AddressSpace addressSpace, String wildcardMark) throws Exception {
         String instanceId = createServiceInstance(addressSpace);
 
         HashMap<String, String> bindResources = new HashMap<>();
-        bindResources.put("sendAddresses", "queue.#");
-        bindResources.put("receiveAddresses", "queue.#");
+        bindResources.put("sendAddresses", String.format("queue.%s", wildcardMark));
+        bindResources.put("receiveAddresses", String.format("queue.%s", wildcardMark));
         bindResources.put("consoleAccess", "true");
         bindResources.put("consoleAdmin", "false");
         bindResources.put("externalAccess", "false");
