@@ -141,7 +141,7 @@ public class OSBApiClient extends ApiClient {
             for (Map.Entry<String, String> entry : bindings.entrySet()) {
                 bindResource.put(entry.getKey(), entry.getValue());
             }
-            payload.put("bindResource", bindResource);
+            payload.put("bind_resource", bindResource);
         }
 
         //prepare and send request
