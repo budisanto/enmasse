@@ -30,6 +30,7 @@ import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
@@ -60,7 +61,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
-    protected static final OSBApiClient osbApiClient = new OSBApiClient(kubernetes);
+    protected OSBApiClient osbApiClient;
     private static Logger log = CustomLogger.getLogger();
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
@@ -80,6 +81,15 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     AddressSpace getSharedAddressSpace() {
         return null;
+    }
+
+    @BeforeAll
+    public void initializeTestBase() {
+        if (!environment.useMinikube()) {
+            osbApiClient = new OSBApiClient(kubernetes);
+        } else {
+            log.info("Open Service Broker API client cannot be initialized, tests running on minikube");
+        }
     }
 
 
